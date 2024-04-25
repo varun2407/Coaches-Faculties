@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Coach vs Faculty Pay Comparison</title>
+  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@5"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+  <style>
+    body {
+      color: black;
+      background-color: white;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    svg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    #content {
+      text-align: center;
+      position: fixed; /* Fixed position */
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      opacity: 1; /* Initially visible */
+      transition: opacity 0.5s; /* Add transition effect */
+    }
+
+    #charts {
+      text-align: center;
+      margin-top: 100vh;
+    }
+
+    #charts.show #content {
+      opacity: 0; /* Hide content when charts are shown */
+    }
+
+    #charts div {
+      margin-bottom: 20px;
+    }
+
+    #text {
+      opacity: 0;
+      transition: opacity 0.5s;
+      margin-top: 30vh;
+      text-align: center;
+    }
+
+    #text.show {
+      opacity: 1; /* Show text */
+    }
+  </style>
+</head>
+<body>
+  <div id="content">
+    <h1 style="font-size: 4rem">Why are coaches being paid more than faculties?</h1>
+  </div>
+  <div id="charts">
+    <div id="vis1"></div>
+    <div id="vis2"></div>
+    <div id="vis3"></div>
+    <div id="vis4"></div>
+    <div id="vis5"></div>
+  </div>
+  <div id="text">
+    <h2>Upon looking at these charts, it is clear that consistently, coaches are paid more than faculties.</h2>
+    <p>This could be because of the fact thatthat coaches may be seen as more revenue-generating than faculty. College athletics can generate a significant amount of money for universities, and coaches who are successful in bringing in revenue may be rewarded with higher salaries.</p>
+    <p>Also, it could be because of the high demand for coaches. Coaches could be sought after by multiple universities, with everyone trying to make a compelling offer</p>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      window.addEventListener("scroll", function() {
+        const charts = document.getElementById("charts");
+        const text = document.getElementById("text");
+        const content = document.getElementById("content");
+        const scrollPosition = window.scrollY;
+
+        if (scrollPosition > window.innerHeight / 2) {
+          charts.classList.add("show"); // Show charts
+          content.classList.add("show"); // Hide h1 and h3
+        } else {
+          charts.classList.remove("show"); // Hide charts
+          content.classList.remove("show"); // Show h1 and h3
+        }
+
+        if (scrollPosition > window.innerHeight) {
+          text.classList.add("show"); // Show text
+        } else {
+          text.classList.remove("show"); // Hide text
+        }
+
+        // Check if the user scrolls past the charts
+        if (scrollPosition > window.innerHeight * 2) {
+          // Show each chart individually with a delay
+          const divs = document.querySelectorAll("#charts > div");
+          let index = 0;
+          const showChart = () => {
+            if (index < divs.length) {
+              divs[index].style.transform = "scale(1.1)"; // Zoom in
+              divs[index].style.transition = "transform 0.5s"; // Add transition effect
+              index++;
+              setTimeout(showChart, 500); // Delay before showing the next chart
+            }
+          };
+          showChart();
+        }
+      });
+    });
+
+    const specTemplate = {
+      "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+      "data": {
+        "url": "coach_vs_faculty.csv",
+        "format": {"type": "csv"}
+      },
+      "mark": "line",
+      "encoding": {
+        "x": {"field": "YEAR", "type": "ordinal", "title": "Year"},
+        "y": {"aggregate": "average", "field": "ANNUAL_RATE", "type": "quantitative", "title": "Average Annual Rate"},
+        "color": {"field": "Job", "type": "nominal", "title": "Job"}
+      },
+      "transform": [
+        {"filter": {"field": "DEPARTMENT_LOCATION_ZIP_CODE", "equal": ""}}
+      ]
+    };
+
+    const campuses = ["U Mass Amherst", "U Mass Boston", "U Mass Dartmouth", "U Mass Lowell", "U Mass Worcester"];
+    const divIds = ["vis1", "vis2", "vis3", "vis4", "vis5"];
+
+    campuses.forEach((campus, index) => {
+      const spec = JSON.parse(JSON.stringify(specTemplate));
+      spec.transform[0].filter.equal = campus;
+      spec.title = `Coach vs Faculty Pay at ${campus}`;
+      vegaEmbed(`#${divIds[index]}`, spec);
+    });
+  </script>
+</body>
+</html>
